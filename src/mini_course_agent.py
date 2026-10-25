@@ -38,9 +38,7 @@ def _record(name: str, arguments: dict[str, Any], result: dict[str, Any]) -> str
     return json.dumps(result)
 
 
-@function_tool
-def get_assignments(status: str = "upcoming") -> str:
-    """Return assignments by status. Status must be upcoming, submitted, not submitted, or all."""
+def _get_assignments(status: str = "upcoming") -> str:
     normalized = status.strip().lower()
     allowed = {"upcoming", "submitted", "not submitted", "all"}
     if normalized not in allowed:
@@ -55,7 +53,12 @@ def get_assignments(status: str = "upcoming") -> str:
 
 
 @function_tool
-def search_course_policy(query: str) -> str:
+def get_assignments(status: str = "upcoming") -> str:
+    """Return assignments by status. Status must be upcoming, submitted, not submitted, or all."""
+    return _get_assignments(status)
+
+
+def _search_course_policy(query: str) -> str:
     """Search approved course policies for late work, attendance, AI use, or grading."""
     clean = re.sub(r"[^a-z0-9 ]", " ", query.lower())
     aliases = {
@@ -76,6 +79,12 @@ def search_course_policy(query: str) -> str:
     return _record("search_course_policy", {"query": query}, result)
 
 
+@function_tool
+def search_course_policy(query: str) -> str:
+    """Search approved course policies for late work, attendance, AI use, or grading."""
+    return _search_course_policy(query)
+
+
 _BINARY = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -94,9 +103,7 @@ def _safe_math(node: ast.AST) -> float:
     raise ValueError("Only numbers and +, -, *, / are allowed")
 
 
-@function_tool
-def calculator(expression: str) -> str:
-    """Safely calculate a short arithmetic expression such as (72 / 80) * 100."""
+def _calculator(expression: str) -> str:
     if len(expression) > 100:
         return _record("calculator", {"expression": expression}, {"ok": False, "error": "Expression is too long"})
     try:
@@ -105,6 +112,12 @@ def calculator(expression: str) -> str:
     except (SyntaxError, ValueError, ZeroDivisionError, OverflowError) as exc:
         result = {"ok": False, "error": str(exc)}
     return _record("calculator", {"expression": expression}, result)
+
+
+@function_tool
+def calculator(expression: str) -> str:
+    """Safely calculate a short arithmetic expression such as (72 / 80) * 100."""
+    return _calculator(expression)
 
 
 SYSTEM_PROMPT = """
